@@ -17,9 +17,6 @@ public class ClientsController : ControllerBase
         _clientService = clientService;
     }
 
-    /// <summary>
-    /// Создать нового клиента
-    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ClientCreateDto dto)
     {
@@ -38,9 +35,6 @@ public class ClientsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    /// <summary>
-    /// Получить всех клиентов
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -48,9 +42,6 @@ public class ClientsController : ControllerBase
         return Ok(clients);
     }
 
-    /// <summary>
-    /// Получить клиента по ID
-    /// </summary>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -58,9 +49,6 @@ public class ClientsController : ControllerBase
         return Ok(client);
     }
 
-    /// <summary>
-    /// Получить подробную информацию о клиенте
-    /// </summary>
     [HttpGet("{id}/detail")]
     public async Task<IActionResult> GetDetail(Guid id)
     {
@@ -68,9 +56,6 @@ public class ClientsController : ControllerBase
         return Ok(client);
     }
 
-    /// <summary>
-    /// Обновить данные клиента
-    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] ClientCreateDto dto)
     {
@@ -88,9 +73,6 @@ public class ClientsController : ControllerBase
         return Ok(client);
     }
 
-    /// <summary>
-    /// Активировать/деактивировать клиента
-    /// </summary>
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> ToggleStatus(Guid id)
     {
@@ -98,13 +80,34 @@ public class ClientsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// Назначить тренера клиенту
-    /// </summary>
     [HttpPost("{clientId}/trainer/{trainerId}")]
     public async Task<IActionResult> AssignTrainer(Guid clientId, Guid trainerId)
     {
         await _clientService.AssignTrainerAsync(clientId, trainerId);
+        return NoContent();
+    }
+
+    // ???????????????????????????????????????????????????????????????
+    // НОВЫЕ МЕТОДЫ ДЛЯ ЧАСТИ 2
+    // ???????????????????????????????????????????????????????????????
+
+    /// <summary>
+    /// Назначить шкафчик клиенту
+    /// </summary>
+    [HttpPost("{clientId}/locker/{lockerId}")]
+    public async Task<IActionResult> AssignLocker(Guid clientId, Guid lockerId)
+    {
+        await _clientService.AssignLockerAsync(clientId, lockerId);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Добавить услугу клиенту
+    /// </summary>
+    [HttpPost("{clientId}/additionalServices/{serviceId}")]
+    public async Task<IActionResult> AddService(Guid clientId, string serviceId)
+    {
+        await _clientService.AddServiceAsync(clientId, serviceId);
         return NoContent();
     }
 }

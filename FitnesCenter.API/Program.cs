@@ -1,22 +1,57 @@
+using System.Text.Json.Serialization;
 using FitnesCenter.API.Middleware;
 using FitnesCenter.Application.Services;
 using FitnesCenter.Domain.Interfaces;
-using FitnesCenter.Infrastructure.Repositories.InMemory;
+using FitnesCenter.Infrastructure.Data;
+using FitnesCenter.Infrastructure.Repositories.EfCore;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ? ÈÑÏĞÀÂËÅÍÎ: Èñïîëüçóåì Singleton âìåñòî Scoped
-builder.Services.AddSingleton<IClientRepository, InMemoryClientRepository>();
-builder.Services.AddSingleton<ITrainerRepository, InMemoryTrainerRepository>();
+// =============================================
+// ÏÎÄÊËŞ×ÅÍÈÅ ÁÀÇÛ ÄÀÍÍÛÕ
+// =============================================
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// =============================================
+// ĞÅÃÈÑÒĞÀÖÈß ĞÅÏÎÇÈÒÎĞÈÅÂ
+// =============================================
+
+builder.Services.AddScoped<IClientRepository, EfClientRepository>();
+builder.Services.AddScoped<ITrainerRepository, EfTrainerRepository>();
+builder.Services.AddScoped<ILockerRepository, EfLockerRepository>();
+builder.Services.AddScoped<IServiceRepository, EfServiceRepository>();
+
+// =============================================
+// ĞÅÃÈÑÒĞÀÖÈß ÑÅĞÂÈÑÎÂ
+// =============================================
 
 builder.Services.AddScoped<ClientService>();
 builder.Services.AddScoped<TrainerService>();
 
 var app = builder.Build();
+
+// =============================================
+// ÏĞÈÌÅÍÅÍÈÅ ÌÈÃĞÀÖÈÉ ÀÂÒÎÌÀÒÈ×ÅÑÊÈ
+// =============================================
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

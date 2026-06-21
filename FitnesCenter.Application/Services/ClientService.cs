@@ -4,48 +4,47 @@ using FitnesCenter.Shared.Exceptions;
 
 namespace FitnesCenter.Application.Services;
 
-/// <summary>
-/// Бизнес-логика для работы с клиентами
-/// </summary>
 public class ClientService
 {
     private readonly IClientRepository _clientRepository;
     private readonly ITrainerRepository _trainerRepository;
+    private readonly ILockerRepository _lockerRepository;
+    private readonly IServiceRepository _serviceRepository;
 
     public ClientService(
         IClientRepository clientRepository,
-        ITrainerRepository trainerRepository)
+        ITrainerRepository trainerRepository,
+        ILockerRepository lockerRepository,
+        IServiceRepository serviceRepository)
     {
         _clientRepository = clientRepository;
         _trainerRepository = trainerRepository;
+        _lockerRepository = lockerRepository;
+        _serviceRepository = serviceRepository;
     }
 
-    /// <summary>
-    /// Создать нового клиента
-    /// </summary>
+    // ════════════════════════════════════════════════════════
+    // СТАРЫЕ МЕТОДЫ (из Части 1)
+    // ════════════════════════════════════════════════════════
+
     public async Task<Client> CreateClientAsync(Client client)
     {
-        // Бизнес-валидация
         if (string.IsNullOrWhiteSpace(client.Surname))
             throw new ValidationException("Фамилия обязательна");
 
         if (string.IsNullOrWhiteSpace(client.Name))
-            throw new ValidationException("Имя обязательно");
+            throw new ValidationException("Имя обязательна");
 
         await _clientRepository.AddAsync(client);
         return client;
     }
 
-    /// <summary>
-    /// Обновить данные клиента
-    /// </summary>
     public async Task<Client> UpdateClientAsync(Guid id, Client updated)
     {
         var existing = await _clientRepository.GetByIdAsync(id);
         if (existing == null)
             throw new NotFoundException(nameof(Client), id);
 
-        // Обновляем только разрешённые поля
         existing.Surname = updated.Surname;
         existing.Name = updated.Name;
         existing.Patronymic = updated.Patronymic;
@@ -57,33 +56,21 @@ public class ClientService
         return existing;
     }
 
-    /// <summary>
-    /// Получить всех клиентов
-    /// </summary>
     public async Task<IEnumerable<Client>> GetAllClientsAsync()
         => await _clientRepository.GetAllAsync();
 
-    /// <summary>
-    /// Получить клиента по ID
-    /// </summary>
     public async Task<Client> GetClientAsync(Guid id)
     {
         var client = await _clientRepository.GetByIdAsync(id);
         return client ?? throw new NotFoundException(nameof(Client), id);
     }
 
-    /// <summary>
-    /// Получить подробную информацию о клиенте
-    /// </summary>
     public async Task<Client> GetClientDetailAsync(Guid id)
     {
         var client = await _clientRepository.GetDetailAsync(id);
         return client ?? throw new NotFoundException(nameof(Client), id);
     }
 
-    /// <summary>
-    /// Активировать/деактивировать клиента
-    /// </summary>
     public async Task ToggleStatusAsync(Guid id)
     {
         var client = await GetClientAsync(id);
@@ -91,9 +78,6 @@ public class ClientService
         await _clientRepository.UpdateAsync(client);
     }
 
-    /// <summary>
-    /// Назначить тренера клиенту
-    /// </summary>
     public async Task AssignTrainerAsync(Guid clientId, Guid trainerId)
     {
         var client = await GetClientAsync(clientId);
@@ -103,6 +87,57 @@ public class ClientService
             throw new NotFoundException(nameof(Trainer), trainerId);
 
         client.TrainerId = trainerId;
+        await _clientRepository.UpdateAsync(client);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // НОВЫЕ МЕТОДЫ (из Части 2) — ТОЛЬКО ОДИН РАЗ!
+    // ════════════════════════════════════════════════════════
+
+    public async Task AssignLockerAsync(Guid clientId, Guid lockerId)
+    {
+        var client = await _clientRepository.GetByIdAsync(clientId);
+        if (client == null)
+            throw new NotFoundException(nameof(Client), clientId);
+
+        var locker = await _lockerRepository.GetByIdAsync(lockerId);
+        if (locker == null)
+            throw new NotFoundException(nameof(Locker), lockerId);
+
+        if (locker.ClientId != null)
+            throw new ConflictException("Шкафчик уже занят");
+
+        if (client.LockerId != null)
+        {
+            var oldLocker = await _lockerRepository.GetByIdAsync(client.LockerId.Value);
+            if (oldLocker != null)
+            {
+                oldLocker.ClientId = null;
+                await _lockerRepository.UpdateAsync(oldLocker);
+            }
+        }
+
+        locker.ClientId = clientId;
+        client.LockerId = lockerId;
+        await _lockerRepository.UpdateAsync(locker);
+        await _clientRepository.UpdateAsync(client);
+    }
+
+    public async Task AddServiceAsync(Guid clientId, string serviceId)
+    {
+        var client = await _clientRepository.GetByIdAsync(clientId);
+        if (client == null)
+            throw new NotFoundException(nameof(Client), clientId);
+
+        var service = await _serviceRepository.GetByIdAsync(serviceId);
+        if (service == null)
+            throw new NotFoundException(nameof(Service), serviceId);
+
+        var clientDetail = await _clientRepository.GetDetailAsync(clientId);
+        if (clientDetail!.Services.Any(s => s.Id == serviceId))
+            throw new ConflictException("Услуга уже добавлена клиенту");
+
+        client.Services.Add(service);
         await _clientRepository.UpdateAsync(client);
     }
 }

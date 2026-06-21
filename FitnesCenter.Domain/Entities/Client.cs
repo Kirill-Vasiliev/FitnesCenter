@@ -67,7 +67,7 @@ public class Client
 
     // ===== ПОЛЯ ДЛЯ ВТОРОЙ ЧАСТИ =====
 
-   // public Guid? LockerId { get; set; }
-   // public virtual Locker? Locker { get; set; }
-    //public virtual ICollection<Service> Services { get; set; } = new List<Service>();
+    public Guid? LockerId { get; set; }
+    public virtual Locker? Locker { get; set; }
+    public virtual ICollection<Service> Services { get; set; } = new List<Service>();
 }
