@@ -1,0 +1,28 @@
+# Visual Studio
+.vs/
+**/bin/
+**/obj/
+
+# .NET
+*.user
+*.suo
+*.cache
+*.pidb
+*.dbmdl
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# IDE
+*.sln.ide
+*.swp
+*.swo
+*~
