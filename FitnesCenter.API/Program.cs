@@ -17,35 +17,27 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// =============================================
 // ондйкчвемхе аюгш дюммшу
-// =============================================
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// =============================================
 // пецхярпюжхъ пеонгхрнпхеб
-// =============================================
 
 builder.Services.AddScoped<IClientRepository, EfClientRepository>();
 builder.Services.AddScoped<ITrainerRepository, EfTrainerRepository>();
 builder.Services.AddScoped<ILockerRepository, EfLockerRepository>();
 builder.Services.AddScoped<IServiceRepository, EfServiceRepository>();
 
-// =============================================
 // пецхярпюжхъ яепбхянб
-// =============================================
 
 builder.Services.AddScoped<ClientService>();
 builder.Services.AddScoped<TrainerService>();
 
 var app = builder.Build();
 
-// =============================================
 // опхлемемхе лхцпюжхи юбрнлюрхвеяйх
-// =============================================
 
 using (var scope = app.Services.CreateScope())
 {

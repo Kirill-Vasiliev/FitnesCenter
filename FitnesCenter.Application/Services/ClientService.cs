@@ -23,9 +23,9 @@ public class ClientService
         _serviceRepository = serviceRepository;
     }
 
-    // ════════════════════════════════════════════════════════
-    // СТАРЫЕ МЕТОДЫ (из Части 1)
-    // ════════════════════════════════════════════════════════
+
+    // МЕТОДЫ из Части 1
+   
 
     public async Task<Client> CreateClientAsync(Client client)
     {
@@ -90,9 +90,7 @@ public class ClientService
         await _clientRepository.UpdateAsync(client);
     }
 
-    // ════════════════════════════════════════════════════════
-    // НОВЫЕ МЕТОДЫ (из Части 2) — ТОЛЬКО ОДИН РАЗ!
-    // ════════════════════════════════════════════════════════
+   
 
     public async Task AssignLockerAsync(Guid clientId, Guid lockerId)
     {
